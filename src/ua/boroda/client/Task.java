@@ -1,5 +1,9 @@
 package ua.boroda.client;
 
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+
 import com.google.gwt.cell.client.SelectionCell;
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.dom.client.Style;
@@ -7,23 +11,41 @@ import com.google.gwt.dom.client.StyleInjector;
 import com.google.gwt.user.cellview.client.Column;
 import com.google.gwt.user.cellview.client.DataGrid;
 import com.google.gwt.user.cellview.client.TextColumn;
-import com.google.gwt.user.client.ui.*;
+import com.google.gwt.user.client.ui.HTML;
+import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.RootLayoutPanel;
+import com.google.gwt.user.client.ui.SplitLayoutPanel;
+import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.view.client.SelectionChangeEvent;
 import com.google.gwt.view.client.SingleSelectionModel;
-
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-
 
 public class Task implements EntryPoint {
     ArrayList<User> users = new ArrayList<User>();
     IdColumn idCol;
     NameColumn nameCol;
-    Widget infoPanel = infoPanel();
+    InfoPanel infoPanel = new InfoPanel();
     SplitLayoutPanel p = new SplitLayoutPanel();
     DataGrid<User> dataGrid;
     List<String> list = new LinkedList();
+
+    class InfoPanel extends VerticalPanel {
+        final String EMAIL = "Email : ";
+        final String SURNAME = "Surname : ";
+
+        Label emailInfo = new Label(EMAIL);
+        Label surnameInfo = new Label(SURNAME);
+
+        public InfoPanel() {
+            add(emailInfo);
+            setSpacing(20);
+            add(surnameInfo);
+        }
+
+        public void setInfo(String email, String surname) {
+            emailInfo.setText(EMAIL + email);
+            surnameInfo.setText(SURNAME + surname);
+        }
+    }
 
     @Override
     public void onModuleLoad() {
@@ -39,10 +61,8 @@ public class Task implements EntryPoint {
         p.getElement().getStyle().setBorderStyle(Style.BorderStyle.SOLID);
         p.getElement().getStyle().setBorderWidth(5, Style.Unit.PX);
         p.getElement().getStyle().setBorderColor("grey");
-        StyleInjector.inject(".gwt-SplitLayoutPanel .gwt-SplitLayoutPanel-VDragger"
-                + "{ height: 5px !important; background: gray; }");
-        StyleInjector.inject(".gwt-SplitLayoutPanel .gwt-SplitLayoutPanel-HDragger"
-                + "{ width: 5px !important; background: gray; }");
+        StyleInjector.inject(".gwt-SplitLayoutPanel .gwt-SplitLayoutPanel-VDragger" + "{ height: 5px !important; background: gray; }");
+        StyleInjector.inject(".gwt-SplitLayoutPanel .gwt-SplitLayoutPanel-HDragger" + "{ width: 5px !important; background: gray; }");
 
         p.addNorth(grid(), 250);
         p.addWest(infoPanel, 400);
@@ -52,27 +72,6 @@ public class Task implements EntryPoint {
         rp.add(p);
     }
 
-    private Widget infoPanel() {
-        VerticalPanel infoPanel = new VerticalPanel();
-        Label emailInfo = new Label("Email : ");
-        Label surnameInfo = new Label("Surname : ");
-        infoPanel.add(emailInfo);
-        infoPanel.setSpacing(20);
-        infoPanel.add(surnameInfo);
-        return infoPanel;
-    }
-
-    private Widget infoPanel(String email, String surname) {
-        VerticalPanel infoPanel = new VerticalPanel();
-        Label emailInfo = new Label("Email : " + email);
-        Label surnameInfo = new Label("Surname : " + surname);
-        infoPanel.add(emailInfo);
-        infoPanel.setSpacing(20);
-        infoPanel.add(surnameInfo);
-        return infoPanel;
-    }
-
-
     public DataGrid grid() {
         // Create a DataGrid.
         dataGrid = new DataGrid<User>();
@@ -80,17 +79,13 @@ public class Task implements EntryPoint {
         dataGrid.setAutoHeaderRefreshDisabled(true);
         dataGrid.setEmptyTableWidget(new Label("empty datagrid"));
 
-        final SingleSelectionModel<User> selectionModel =
-                new SingleSelectionModel<User>();
+        final SingleSelectionModel<User> selectionModel = new SingleSelectionModel<User>();
         dataGrid.setSelectionModel(selectionModel);
         selectionModel.addSelectionChangeHandler(new SelectionChangeEvent.Handler() {
             public void onSelectionChange(SelectionChangeEvent event) {
                 User selected = selectionModel.getSelectedObject();
                 if (selected != null) {
-                    p.clear();
-                    p.addNorth(grid(), 250);
-                    p.addWest(infoPanel(selected.getEmail(), selected.getSurname()), 400);
-                    p.add(new HTML("additional field"));
+                    infoPanel.setInfo(selected.getEmail(), selected.getSurname());
                 }
             }
         });
@@ -121,6 +116,7 @@ public class Task implements EntryPoint {
             return user.getId();
         }
     }
+
     private class NameColumn extends TextColumn<User> {
         @Override
         public String getValue(User user) {
